@@ -1,7 +1,9 @@
 spring:
   application:
     name: transactional-limit-service
-
+  docker:
+    compose:
+      enabled: false
   datasource:
     url: ${DB_URL}
     password: ${DB_PASSWORD}
