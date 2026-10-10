@@ -7,7 +7,7 @@ CREATE TABLE currency
 
 CREATE TABLE expense_category
 (
-    id   INTEGER PRIMARY KEY,
+    id   INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     name VARCHAR(50) NOT NULL UNIQUE
 );
 
@@ -66,16 +66,11 @@ CREATE TABLE transaction
 
 CREATE TABLE exchange_rate
 (
+    id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     base_currency   VARCHAR(3)     NOT NULL,
     target_currency VARCHAR(3)     NOT NULL,
     rate            NUMERIC(15, 4) NOT NULL,
     rate_date       DATE           NOT NULL,
-
-    PRIMARY KEY (
-                 base_currency,
-                 target_currency,
-                 rate_date
-        ),
 
     CONSTRAINT fk_exchange_base_currency
         FOREIGN KEY (base_currency)
