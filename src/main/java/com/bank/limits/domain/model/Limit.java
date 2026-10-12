@@ -1,9 +1,13 @@
 package com.bank.limits.domain.model;
 
+import java.time.OffsetDateTime;
+
 public record Limit(
         Money amount,
         Currency currency,
-        ExpenseCategory expenseCategory
+        ExpenseCategory expenseCategory,
+        String accountFrom,
+        OffsetDateTime setDatetime
 ) {
 
         public Limit {

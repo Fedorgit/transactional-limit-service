@@ -8,12 +8,13 @@ public class LimitService {
 
     private final CheckAvailableCategory checkAvailableCategory;
 
-    public void setLimit(Limit limit){
+    public Limit setLimit(Limit limit){
 
         if (!checkAvailableCategory.isAvailableCategory(limit.expenseCategory())){
             throw new IllegalArgumentException("No such this Category!");
         }
 
+        return limit;
     }
 
 }

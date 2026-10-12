@@ -19,12 +19,6 @@ public class DomainServiceConfig {
         return new CheckAvailableCategory(availableCategoriesRepository);
     }
 
-    @Bean
-    public ExecuteTransactionService executeTransactionService(
-            CheckAvailableCategory checkAvailableCategory,
-            PreviousTransactionRepository previousTransactionRepository
-    ){
-        return new ExecuteTransactionService(checkAvailableCategory,previousTransactionRepository);
-    }
+
 
 }
