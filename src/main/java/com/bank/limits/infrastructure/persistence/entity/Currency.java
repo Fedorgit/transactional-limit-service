@@ -6,11 +6,15 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Getter
 @Setter
+@NoArgsConstructor
+@AllArgsConstructor
 @Entity
 @Table(name = "currency")
 public class Currency {
@@ -18,9 +22,5 @@ public class Currency {
     @Size(max = 3)
     @Column(name = "code", nullable = false, length = 3)
     private String code;
-
-    @NotNull
-    @Column(name = "numeric_code", nullable = false)
-    private Short numericCode;
 
 }
