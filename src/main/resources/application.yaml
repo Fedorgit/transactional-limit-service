@@ -19,4 +19,4 @@ spring:
 external-api:
     alphavantage:
       key: ${API_KEY_ALPHAVANTAGE}
-      uri:
+      uri: ${API_URI_ALPHAVANTAGE}

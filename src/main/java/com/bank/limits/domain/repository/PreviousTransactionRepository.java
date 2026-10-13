@@ -6,6 +6,6 @@ import java.util.List;
 
 public interface PreviousTransactionRepository {
 
-    public List<PreviousTransaction> getPreviousTransactions();
+    List<PreviousTransaction> getPreviousTransactions();
 
 }

@@ -12,6 +12,7 @@ import org.springframework.web.client.RestClientException;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 @Component
 public class AlphavantageService implements ExternalApiClient {
@@ -23,11 +24,12 @@ public class AlphavantageService implements ExternalApiClient {
     public AlphavantageService(
             RestClient.Builder restClientBuilder,
             @Value("${external-api.alphavantage.key}") String apiKey,
+            @Value("${external-api.alphavantage.uri}") String baseUrl,
             ExternalApiResponseMapper externalApiResponseMapper
     ) {
         this.apiKey = apiKey;
         this.restClient = restClientBuilder
-                .baseUrl("https://www.alphavantage.co/query")
+                .baseUrl(baseUrl)
                 .build();
         this.externalApiResponseMapper = externalApiResponseMapper;
     }
@@ -42,7 +44,7 @@ public class AlphavantageService implements ExternalApiClient {
 
         return toCurrency.stream()
                 .map(tCurrency -> {
-                    AplhavantageExchangeRateDetails response = this.restClient.get()
+                    AlphaVantageResponse response = this.restClient.get()
                             .uri(uriBuilder -> uriBuilder
                                     .queryParam("function", "CURRENCY_EXCHANGE_RATE")
                                     .queryParam("from_currency", baseCurrency)
@@ -50,9 +52,12 @@ public class AlphavantageService implements ExternalApiClient {
                                     .queryParam("apikey", apiKey)
                                     .build())
                             .retrieve()
-                            .body(AplhavantageExchangeRateDetails.class);
+                            .body(AlphaVantageResponse.class);
 
-                    return externalApiResponseMapper.toLocal(response);
+                    return Optional.ofNullable(response)
+                            .map(AlphaVantageResponse::exchangeRateDetails)
+                            .map(externalApiResponseMapper::toLocal)
+                            .orElse(null);
                 })
                 .filter(Objects::nonNull)
                 .toList();

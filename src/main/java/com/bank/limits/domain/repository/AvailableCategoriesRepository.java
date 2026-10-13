@@ -6,5 +6,5 @@ import java.util.List;
 
 public interface AvailableCategoriesRepository {
 
-    public List<ExpenseCategory> getCategories();
+    List<ExpenseCategory> getCategories();
 }
