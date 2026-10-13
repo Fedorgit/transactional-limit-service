@@ -19,19 +19,19 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-class LimitServiceTest {
+class ExpenseLimitServiceTest {
 
     private com.bank.limits.domain.service.LimitService domainLimitService;
     private LimitMapper limitMapper;
     private ExpenseLimitRepository limitRepository;
-    private LimitService limitService;
+    private ExpenseLimitService expenseLimitService;
 
     @BeforeEach
     void setUp() {
         domainLimitService = mock(com.bank.limits.domain.service.LimitService.class);
         limitMapper = mock(LimitMapper.class);
         limitRepository = mock(ExpenseLimitRepository.class);
-        limitService = new LimitService(domainLimitService, limitMapper, limitRepository);
+        expenseLimitService = new ExpenseLimitService(domainLimitService, limitMapper, limitRepository);
     }
 
     @Test
@@ -52,7 +52,7 @@ class LimitServiceTest {
         when(limitRepository.save(entityToSave)).thenReturn(savedEntity);
         when(limitMapper.toResponseDto(savedEntity)).thenReturn(expectedResponse);
 
-        LimitResponseDto response = limitService.setNewExpenseLimit(request);
+        LimitResponseDto response = expenseLimitService.setNewExpenseLimit(request);
 
         assertSame(expectedResponse, response);
         verify(limitMapper).toDomain(request);
@@ -75,7 +75,7 @@ class LimitServiceTest {
 
         IllegalArgumentException actualException = assertThrows(
                 IllegalArgumentException.class,
-                () -> limitService.setNewExpenseLimit(request)
+                () -> expenseLimitService.setNewExpenseLimit(request)
         );
 
         assertSame(expectedException, actualException);

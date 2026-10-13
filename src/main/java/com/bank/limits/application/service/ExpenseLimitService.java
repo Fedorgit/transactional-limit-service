@@ -14,7 +14,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class LimitService {
+public class ExpenseLimitService {
 
     private final com.bank.limits.domain.service.LimitService limitService;
     private final LimitMapper limitMapper;

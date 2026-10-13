@@ -2,6 +2,7 @@ package com.bank.limits.infrastructure.rest.external;
 
 import com.bank.limits.infrastructure.persistence.entity.ExchangeRate;
 import com.bank.limits.infrastructure.persistence.repository.ExchangeRateRepository;
+import com.bank.limits.infrastructure.rest.external.dto.ExchangeRatesProperties;
 import com.bank.limits.infrastructure.rest.external.dto.ExchangesFromApiDto;
 import com.bank.limits.infrastructure.rest.external.mapper.ExternalApiResponseMapper;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -17,24 +18,23 @@ public class ExchangeRateService {
     private final ExternalApiClient apiClient;
     private final ExchangeRateRepository exchangeRateRepository;
     private final ExternalApiResponseMapper externalApiResponseMapper;
+    private final ExchangeRatesProperties ratesProperties;
 
     @Value("${exchange-rates.base-currency}")
     private String baseCurrency;
 
-    @Value("${exchange-rates.target-currency}")
-    private List<String> targetCurrencies;
-
-    public ExchangeRateService(@Qualifier("alphavantageService") ExternalApiClient apiClient, ExchangeRateRepository exchangeRateRepository, ExternalApiResponseMapper externalApiResponseMapper) {
+    public ExchangeRateService(@Qualifier("alphavantageService") ExternalApiClient apiClient, ExchangeRateRepository exchangeRateRepository, ExternalApiResponseMapper externalApiResponseMapper, ExchangeRatesProperties targetCurrencies) {
         this.apiClient = apiClient;
         this.exchangeRateRepository = exchangeRateRepository;
         this.externalApiResponseMapper = externalApiResponseMapper;
+        this.ratesProperties = targetCurrencies;
     }
 
     @Scheduled(cron = "0 13 1 * * ?")
 
     public void fetchExchanges(){
 
-        List<ExchangesFromApiDto> exchanges = apiClient.doRequest(baseCurrency,targetCurrencies);
+        List<ExchangesFromApiDto> exchanges = apiClient.doRequest(baseCurrency, ratesProperties.targetCurrency());
 
         List<ExchangeRate> entities = exchanges.stream()
                 .map(externalApiResponseMapper::toEntity)

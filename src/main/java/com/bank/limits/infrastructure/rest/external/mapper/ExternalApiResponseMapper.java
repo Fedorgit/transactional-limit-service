@@ -9,6 +9,8 @@ import org.mapstruct.MappingConstants;
 import org.mapstruct.Named;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.math.RoundingMode;
 
 @Mapper(componentModel = MappingConstants.ComponentModel.SPRING)
@@ -25,6 +27,14 @@ public interface ExternalApiResponseMapper {
     @Mapping(target = "rateDate", source = "rate_date")
     @Mapping(target = "baseCurrency", source = "base_currency")
     ExchangeRate toEntity(ExchangesFromApiDto exchangesFromApiDto);
+
+    default com.bank.limits.infrastructure.persistence.entity.Currency toEntityCurrency(String code) {
+        return code == null ? null : new com.bank.limits.infrastructure.persistence.entity.Currency(code);
+    }
+
+    default LocalDate toLocalDate(OffsetDateTime dateTime) {
+        return dateTime == null ? null : dateTime.toLocalDate();
+    }
 
     @Named("scaleRate")
     default BigDecimal scaleRate(BigDecimal rawRate) {

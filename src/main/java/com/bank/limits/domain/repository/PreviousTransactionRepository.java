@@ -1,12 +1,11 @@
 package com.bank.limits.domain.repository;
 
 import com.bank.limits.domain.model.PreviousTransaction;
-import com.bank.limits.domain.model.Transaction;
 
-import java.util.Set;
+import java.util.List;
 
 public interface PreviousTransactionRepository {
 
-    public Set<PreviousTransaction> getPreviousTransactions();
+    public List<PreviousTransaction> getPreviousTransactions();
 
 }
