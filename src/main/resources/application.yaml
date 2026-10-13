@@ -13,3 +13,10 @@ spring:
       ddl-auto: none
   jackson:
     property-naming-strategy: SNAKE_CASE
+  config:
+    import: classpath:exchange-rates.yaml
+
+external-api:
+    alphavantage:
+      key: ${API_KEY_ALPHAVANTAGE}
+      uri:

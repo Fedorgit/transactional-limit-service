@@ -1,0 +1,6 @@
+exchange-rates:
+  base-currency: USD
+  target-currency:
+    - KZT
+    - RUB
+    - EUR
