@@ -4,10 +4,13 @@ import com.bank.limits.application.mapper.LimitMapper;
 import com.bank.limits.domain.model.Limit;
 import com.bank.limits.infrastructure.persistence.entity.ExpenseLimit;
 import com.bank.limits.infrastructure.persistence.repository.ExpenseLimitRepository;
-import com.bank.limits.infrastructure.rest.dto.LimitResponseDto;
-import com.bank.limits.infrastructure.rest.dto.SetNewLimitRequestDto;
+import com.bank.limits.infrastructure.rest.dto.limit.LimitResponseDto;
+import com.bank.limits.infrastructure.rest.dto.limit.SetNewLimitRequestDto;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+
 
 @Service
 @RequiredArgsConstructor
@@ -25,4 +28,10 @@ public class LimitService {
 
     }
 
+    public Page<LimitResponseDto> getLimits(String accountFrom, Pageable pageable){
+
+        return limitRepository
+                .findByAccountFrom(accountFrom,pageable)
+                .map(limitMapper::toResponseDto);
+    }
 }

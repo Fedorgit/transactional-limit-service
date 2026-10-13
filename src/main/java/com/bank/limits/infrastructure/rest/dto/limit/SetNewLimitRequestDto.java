@@ -1,6 +1,4 @@
-package com.bank.limits.infrastructure.rest.dto;
-
-import com.fasterxml.jackson.annotation.JsonProperty;
+package com.bank.limits.infrastructure.rest.dto.limit;
 
 import java.math.BigDecimal;
 

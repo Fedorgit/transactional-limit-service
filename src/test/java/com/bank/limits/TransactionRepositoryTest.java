@@ -1,5 +1,6 @@
 package com.bank.limits;
 
+import com.bank.limits.infrastructure.persistence.dto.ExceededTransactionWithLimitDto;
 import com.bank.limits.infrastructure.persistence.entity.Currency;
 import com.bank.limits.infrastructure.persistence.entity.ExpenseCategory;
 import com.bank.limits.infrastructure.persistence.entity.ExpenseLimit;
@@ -7,17 +8,20 @@ import com.bank.limits.infrastructure.persistence.entity.Transaction;
 import com.bank.limits.infrastructure.persistence.repository.TransactionRepository;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
+import org.assertj.core.groups.Tuple;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
-import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
 
 @DataJpaTest
 @ActiveProfiles("test")
@@ -35,7 +39,7 @@ public class TransactionRepositoryTest {
     private EntityManager entityManager;
 
     @Test
-    void findExpenseLimitTransactionFiltersByAccountCurrencyExceededFlagAndApplicableLimit() {
+    void findExceededTransactionsReturnsTransactionsWithLatestApplicableLimitInDatetimeOrder() {
         Currency usd = new Currency();
         usd.setCode("USD");
         entityManager.persist(usd);
@@ -44,28 +48,114 @@ public class TransactionRepositoryTest {
         eur.setCode("EUR");
         entityManager.persist(eur);
 
+        ExpenseCategory food = saveCategory("Food");
+        ExpenseCategory travel = saveCategory("Travel");
+        ExpenseCategory uncategorized = saveCategory("Other");
+
+        OffsetDateTime nextLimitSetAt = LIMIT_SET_AT.plusDays(3);
+        saveLimit(ACCOUNT_FROM, food, LIMIT_SET_AT, "100.00", usd);
+        saveLimit(ACCOUNT_FROM, food, nextLimitSetAt, "150.00", usd);
+        saveLimit(ACCOUNT_FROM, travel, LIMIT_SET_AT.plusDays(1), "75.00", eur);
+        saveLimit(OTHER_ACCOUNT, food, LIMIT_SET_AT, "200.00", usd);
+
+        Transaction latestLimitTransaction = saveTransaction(
+                ACCOUNT_FROM, food, nextLimitSetAt.plusDays(1), true, usd
+        );
+        Transaction earlierTransaction = saveTransaction(
+                ACCOUNT_FROM, food, LIMIT_SET_AT.plusDays(1), true, usd
+        );
+        Transaction otherCategoryTransaction = saveTransaction(
+                ACCOUNT_FROM, travel, LIMIT_SET_AT.plusDays(2), true, eur
+        );
+        saveTransaction(ACCOUNT_FROM, food, LIMIT_SET_AT.minusDays(1), true, usd);
+        saveTransaction(ACCOUNT_FROM, food, nextLimitSetAt.plusDays(2), false, usd);
+        saveTransaction(OTHER_ACCOUNT, food, nextLimitSetAt.plusDays(2), true, usd);
+        saveTransaction(ACCOUNT_FROM, uncategorized, nextLimitSetAt.plusDays(2), true, usd);
+
+        Page<ExceededTransactionWithLimitDto> firstPage =
+                transactionRepository.findExceededTransactions(ACCOUNT_FROM, PageRequest.of(0, 2));
+        Page<ExceededTransactionWithLimitDto> secondPage =
+                transactionRepository.findExceededTransactions(ACCOUNT_FROM, PageRequest.of(1, 2));
+
+        assertThat(firstPage.getContent())
+                .extracting(this::transactionDetails)
+                .containsExactly(
+                        tuple(
+                                earlierTransaction.getId(),
+                                LIMIT_SET_AT.plusDays(1),
+                                ACCOUNT_FROM,
+                                OTHER_ACCOUNT,
+                                new BigDecimal("10.00"),
+                                "USD",
+                                "Food",
+                                true,
+                                new BigDecimal("100.00"),
+                                "USD",
+                                LIMIT_SET_AT
+                        ),
+                        tuple(
+                                otherCategoryTransaction.getId(),
+                                LIMIT_SET_AT.plusDays(2),
+                                ACCOUNT_FROM,
+                                OTHER_ACCOUNT,
+                                new BigDecimal("10.00"),
+                                "EUR",
+                                "Travel",
+                                true,
+                                new BigDecimal("75.00"),
+                                "EUR",
+                                LIMIT_SET_AT.plusDays(1)
+                        )
+                );
+        assertThat(firstPage.getNumber()).isZero();
+        assertThat(firstPage.getSize()).isEqualTo(2);
+        assertThat(firstPage.getTotalElements()).isEqualTo(3);
+        assertThat(firstPage.getTotalPages()).isEqualTo(2);
+        assertThat(firstPage.hasNext()).isTrue();
+
+        assertThat(secondPage.getContent())
+                .extracting(this::transactionDetails)
+                .containsExactly(
+                        tuple(
+                                latestLimitTransaction.getId(),
+                                nextLimitSetAt.plusDays(1),
+                                ACCOUNT_FROM,
+                                OTHER_ACCOUNT,
+                                new BigDecimal("10.00"),
+                                "USD",
+                                "Food",
+                                true,
+                                new BigDecimal("150.00"),
+                                "USD",
+                                nextLimitSetAt
+                        )
+                );
+        assertThat(secondPage.getNumber()).isEqualTo(1);
+        assertThat(secondPage.getTotalElements()).isEqualTo(3);
+        assertThat(secondPage.hasNext()).isFalse();
+    }
+
+    private ExpenseCategory saveCategory(String name) {
         ExpenseCategory category = new ExpenseCategory();
-        category.setName("Food");
+        category.setName(name);
         entityManager.persist(category);
+        return category;
+    }
 
-        saveLimit(ACCOUNT_FROM, category, LIMIT_SET_AT, "100.00", usd);
-        saveLimit(ACCOUNT_FROM, category, LIMIT_SET_AT.plusDays(3), "150.00", usd);
-        saveTransaction(ACCOUNT_FROM, category, LIMIT_SET_AT.minusDays(1), true, usd);
-        Transaction transactionWithPreviousLimit = saveTransaction(
-                ACCOUNT_FROM, category, LIMIT_SET_AT.plusDays(2), true, usd
+    private Tuple transactionDetails(ExceededTransactionWithLimitDto transaction) {
+        return tuple(
+                transaction.id(),
+                transaction.datetime(),
+                transaction.accountFrom(),
+                transaction.accountTo(),
+                transaction.amount(),
+                transaction.currencyCode().getCode(),
+                transaction.expenseCategory().getName(),
+                transaction.limitExceeded(),
+                transaction.limit_amount(),
+                transaction.limit_currencyCode().getCode(),
+                transaction.limit_setDatetime()
         );
-        Transaction expected = saveTransaction(
-                ACCOUNT_FROM, category, LIMIT_SET_AT.plusDays(4), true, usd
-        );
-        saveTransaction(ACCOUNT_FROM, category, LIMIT_SET_AT.plusDays(4), false, usd);
-        saveTransaction(OTHER_ACCOUNT, category, LIMIT_SET_AT.plusDays(4), true, usd);
-        saveTransaction(ACCOUNT_FROM, category, LIMIT_SET_AT.plusDays(4), true, eur);
-
-        Set<Transaction> results = transactionRepository.findExpenseLimitTransaction(ACCOUNT_FROM);
-
-        assertThat(results)
-                .extracting(Transaction::getId)
-                .containsExactlyInAnyOrder(transactionWithPreviousLimit.getId(), expected.getId());
     }
 
     private void saveLimit(

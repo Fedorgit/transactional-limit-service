@@ -4,8 +4,8 @@ import com.bank.limits.application.mapper.LimitMapper;
 import com.bank.limits.domain.model.Limit;
 import com.bank.limits.infrastructure.persistence.entity.ExpenseLimit;
 import com.bank.limits.infrastructure.persistence.repository.ExpenseLimitRepository;
-import com.bank.limits.infrastructure.rest.dto.LimitResponseDto;
-import com.bank.limits.infrastructure.rest.dto.SetNewLimitRequestDto;
+import com.bank.limits.infrastructure.rest.dto.limit.LimitResponseDto;
+import com.bank.limits.infrastructure.rest.dto.limit.SetNewLimitRequestDto;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
