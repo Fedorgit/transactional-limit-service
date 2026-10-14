@@ -1,0 +1,1 @@
+ALTER TABLE currency DROP COLUMN IF EXISTS numeric_code;

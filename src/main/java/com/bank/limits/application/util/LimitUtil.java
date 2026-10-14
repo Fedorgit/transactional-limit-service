@@ -6,6 +6,7 @@ import com.bank.limits.infrastructure.persistence.entity.ExpenseCategory;
 import com.bank.limits.infrastructure.persistence.entity.ExpenseLimit;
 import com.bank.limits.infrastructure.persistence.repository.ExpenseCategoryRepository;
 import com.bank.limits.infrastructure.persistence.repository.ExpenseLimitRepository;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -27,9 +28,9 @@ public class LimitUtil {
         limit.setSetDatetime(setDatetime);
         limit.setExpenseCategory(
                 expenseCategoryRepository.findTopByName(expenseCategory).orElseThrow(
-                        () ->{
-                            return new RuntimeException("Not found");
-                        }
+                        () -> new EntityNotFoundException(
+                                "Expense category not found: " + expenseCategory
+                        )
                 )
         );
 
