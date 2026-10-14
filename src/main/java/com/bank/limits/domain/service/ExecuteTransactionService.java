@@ -11,6 +11,8 @@ import com.bank.limits.domain.model.PreviousTransaction;
 import com.bank.limits.domain.model.Transaction;
 import com.bank.limits.domain.repository.PreviousTransactionRepository;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
 import java.math.MathContext;
@@ -23,6 +25,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class ExecuteTransactionService {
 
+    private static final Logger log = LoggerFactory.getLogger(ExecuteTransactionService.class);
     private static final MathContext DIVISION_CONTEXT = MathContext.DECIMAL128;
 
     private final CheckAvailableCategory checkAvailableCategory;
@@ -86,6 +89,11 @@ public class ExecuteTransactionService {
         );
 
         boolean isLimitExceeded = totalTransactionAmount.amount().compareTo(limit.amount().amount()) > 0;
+        log.info(
+                "Transaction limit evaluated: currency={}, limitExceeded={}",
+                limit.currency().code(),
+                isLimitExceeded
+        );
 
         if (isLimitExceeded) {
             Money excess = calculateLimitExcess(limit, totalTransactionAmount);

@@ -9,11 +9,15 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
 @Service
 public class ExchangeRateService {
+
+    private static final Logger log = LoggerFactory.getLogger(ExchangeRateService.class);
 
     private final ExternalApiClient apiClient;
     private final ExchangeRateRepository exchangeRateRepository;
@@ -33,7 +37,7 @@ public class ExchangeRateService {
     @Scheduled(cron = "0 13 1 * * ?")
 
     public void fetchExchanges(){
-
+        log.info("Starting scheduled exchange-rate refresh");
         List<ExchangesFromApiDto> exchanges = apiClient.doRequest(baseCurrency, ratesProperties.targetCurrency());
 
         List<ExchangeRate> entities = exchanges.stream()
@@ -41,6 +45,7 @@ public class ExchangeRateService {
                 .toList();
 
         exchangeRateRepository.saveAll(entities);
+        log.info("Saved {} exchange rates", entities.size());
     }
 
 
