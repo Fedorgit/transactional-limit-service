@@ -10,6 +10,10 @@ import com.bank.limits.infrastructure.rest.dto.transaction.TransactionRequestDto
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
+import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+
 @Mapper(
         componentModel = "spring"
 )
@@ -34,6 +38,25 @@ public interface TransactionMapper {
             TransactionRequestDto dto,
             boolean limitExceeded
     );
+
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "datetime", source = "dto.datetime")
+    @Mapping(target = "accountFrom", source = "dto.accountFrom")
+    @Mapping(target = "accountTo", source = "dto.accountTo")
+    @Mapping(target = "amount", source = "dto.sum")
+    @Mapping(target = "currencyCode", source = "currency")
+    @Mapping(target = "expenseCategory", source = "category")
+    @Mapping(target = "limitExceeded", source = "limitExceeded")
+    com.bank.limits.infrastructure.persistence.entity.Transaction toEntity(
+            TransactionRequestDto dto,
+            com.bank.limits.infrastructure.persistence.entity.Currency currency,
+            com.bank.limits.infrastructure.persistence.entity.ExpenseCategory category,
+            boolean limitExceeded
+    );
+
+    default OffsetDateTime toOffsetDateTime(Instant instant) {
+        return instant == null ? null : instant.atOffset(ZoneOffset.UTC);
+    }
 
     default AccountNumber toAccountNumber(String number) {
         return new AccountNumber(number);

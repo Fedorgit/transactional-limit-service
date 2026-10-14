@@ -9,4 +9,6 @@ import java.util.Optional;
 
 public interface ExpenseCategoryRepository extends JpaRepository<ExpenseCategory, Integer> {
     public Optional<ExpenseCategory> findTopByName(@Size(max = 50) @NotNull String name);
+
+    boolean existsByName(String name);
 }

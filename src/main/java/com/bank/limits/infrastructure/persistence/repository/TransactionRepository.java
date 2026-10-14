@@ -2,15 +2,33 @@ package com.bank.limits.infrastructure.persistence.repository;
 
 import com.bank.limits.infrastructure.persistence.dto.ExceededTransactionWithLimitDto;
 import com.bank.limits.infrastructure.persistence.entity.Transaction;
+import org.springframework.data.repository.query.Param;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
+import java.time.OffsetDateTime;
 import java.util.List;
-import java.util.Set;
 
 public interface TransactionRepository extends JpaRepository<Transaction, Long> {
+
+    @Query("""
+            SELECT t
+            FROM Transaction t
+            JOIN FETCH t.currencyCode
+            WHERE t.accountFrom = :accountFrom
+              AND t.expenseCategory.name = :categoryName
+              AND t.datetime >= :fromDate
+              AND t.datetime < :toDate
+            ORDER BY t.datetime
+            """)
+    List<Transaction> findPreviousTransactions(
+            @Param("accountFrom") String accountFrom,
+            @Param("categoryName") String categoryName,
+            @Param("fromDate") OffsetDateTime fromDate,
+            @Param("toDate") OffsetDateTime toDate
+    );
 
     @Query("""
     SELECT new com.bank.limits.infrastructure.persistence.dto.ExceededTransactionWithLimitDto(

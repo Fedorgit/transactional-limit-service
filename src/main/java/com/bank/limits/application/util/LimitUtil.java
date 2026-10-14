@@ -19,12 +19,12 @@ public class LimitUtil {
     private final ExpenseCategoryRepository expenseCategoryRepository;
     private final ExpenseLimitRepository expenseLimitRepository;
 
-    public ExpenseLimit createLimit(String accountFrom, String expenseCategory){
+    public ExpenseLimit createLimit(String accountFrom, String expenseCategory, OffsetDateTime setDatetime){
         ExpenseLimit limit = new ExpenseLimit();
         limit.setAccountFrom(accountFrom);
         limit.setAmount(BigDecimal.valueOf(1000));
         limit.setCurrencyCode(new Currency("USD"));
-        limit.setSetDatetime(OffsetDateTime.now());
+        limit.setSetDatetime(setDatetime);
         limit.setExpenseCategory(
                 expenseCategoryRepository.findTopByName(expenseCategory).orElseThrow(
                         () ->{

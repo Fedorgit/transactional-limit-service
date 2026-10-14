@@ -1,16 +1,29 @@
 package com.bank.limits.domain.service;
 
-import com.bank.limits.domain.model.*;
-import com.bank.limits.domain.repository.AvailableCategoriesRepository;
+import com.bank.limits.domain.exception.BusinessRuleException;
+import com.bank.limits.domain.exception.DomainValidationException;
+import com.bank.limits.domain.model.Currency;
+import com.bank.limits.domain.model.ExchangeRate;
+import com.bank.limits.domain.model.Limit;
+import com.bank.limits.domain.model.LimitStatus;
+import com.bank.limits.domain.model.Money;
+import com.bank.limits.domain.model.PreviousTransaction;
+import com.bank.limits.domain.model.Transaction;
 import com.bank.limits.domain.repository.PreviousTransactionRepository;
 import lombok.RequiredArgsConstructor;
 
 import java.math.BigDecimal;
+import java.math.MathContext;
 import java.math.RoundingMode;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.util.List;
 import java.util.Optional;
 
 @RequiredArgsConstructor
 public class ExecuteTransactionService {
+
+    private static final MathContext DIVISION_CONTEXT = MathContext.DECIMAL128;
 
     private final CheckAvailableCategory checkAvailableCategory;
     private final PreviousTransactionRepository previousTransactionRepository;
@@ -20,36 +33,62 @@ public class ExecuteTransactionService {
             ExchangeRate exchangeRate,
             Limit limit
     ){
-
-        if(transaction.transactionAmount().amount().compareTo(BigDecimal.ZERO)<=0){
-            throw new IllegalArgumentException("Money can't be 0 or less then 0!");
+        if (transaction == null) {
+            throw new DomainValidationException("Transaction is required");
+        }
+        if (limit == null) {
+            throw new DomainValidationException("Limit is required");
+        }
+        if (!transaction.accountFrom().number().equals(limit.accountFrom())
+                || !transaction.expenseCategory().equals(limit.expenseCategory())) {
+            throw new BusinessRuleException("Transaction must be evaluated against its account and category limit");
+        }
+        if (transaction.transactionDate().isBefore(limit.setDatetime().toInstant())) {
+            throw new BusinessRuleException("Transaction date must not be earlier than the applicable limit");
         }
 
         if (!checkAvailableCategory.isAvailableCategory(transaction.expenseCategory())){
-            throw new IllegalArgumentException("No such this Category!");
+            throw new BusinessRuleException(
+                    "Unknown expense category: " + transaction.expenseCategory().category()
+            );
         }
 
 
-        Money currentTransactionAmount =
-                !isCurrencyEquals(transaction.transactionAmount(),limit.amount()) ?
-                        convertCurrency(transaction.transactionAmount(),exchangeRate) :
-                        transaction.transactionAmount();
-
-        Optional<BigDecimal> previousTransactionsTotalAmount =
-                previousTransactionRepository.getPreviousTransactions().stream()
-                .map(PreviousTransaction::transactionAmount)
-                .map(Money::amount)
-                .reduce(BigDecimal::add);
-
-        Money previousTransactionAmount = previousTransactionsTotalAmount.map(bigDecimal -> new Money(
+        Money currentTransactionAmount = convertCurrency(
+                transaction.transactionAmount(),
                 limit.currency(),
-                bigDecimal.add(currentTransactionAmount.amount())
-        )).orElse(currentTransactionAmount);
+                exchangeRate,
+                transaction.transactionDate()
+        );
 
-        boolean isLimitExceeded = previousTransactionAmount.amount().compareTo(limit.amount().amount()) > 0;
+        List<PreviousTransaction> previousTransactions = previousTransactionRepository.getPreviousTransactions(
+                transaction.accountFrom().number(),
+                transaction.expenseCategory(),
+                transaction.transactionDate(),
+                limit.setDatetime().toInstant()
+        );
+
+        BigDecimal previousTransactionsTotalAmount = previousTransactions.stream()
+                .map(PreviousTransaction::transactionAmount)
+                .map(previousAmount -> {
+                    if (!limit.currency().equals(previousAmount.currency())) {
+                        throw new BusinessRuleException(
+                                "Previous transaction amounts must be in " + limit.currency().code()
+                        );
+                    }
+                    return previousAmount.amount();
+                })
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        Money totalTransactionAmount = new Money(
+                limit.currency(),
+                previousTransactionsTotalAmount.add(currentTransactionAmount.amount())
+        );
+
+        boolean isLimitExceeded = totalTransactionAmount.amount().compareTo(limit.amount().amount()) > 0;
 
         if (isLimitExceeded) {
-            Money excess = calculateLimitExcess(limit, previousTransactionAmount);
+            Money excess = calculateLimitExcess(limit, totalTransactionAmount);
             return new LimitStatus(true, Optional.of(excess));
         }
         else {
@@ -64,23 +103,42 @@ public class ExecuteTransactionService {
                 );
     }
 
-    private Money convertCurrency(Money money, ExchangeRate exchangeRate) {
-        if (!money.currency().equals(exchangeRate.baseCurrency())) {
-            throw new IllegalArgumentException("Money currency must match the exchange rate base currency");
+    private Money convertCurrency(
+            Money money,
+            Currency targetCurrency,
+            ExchangeRate exchangeRate,
+            Instant transactionDate
+    ) {
+        if (money.currency().equals(targetCurrency)) {
+            return new Money(targetCurrency, money.amount());
         }
 
-        BigDecimal convertedAmount = money.amount()
-                .multiply(exchangeRate.rate())
-                .setScale(2, RoundingMode.HALF_UP);
+        if (exchangeRate == null) {
+            throw new BusinessRuleException(
+                    "Exchange rate does not match the transaction and limit currencies"
+            );
+        }
+        if (exchangeRate.rateDate().isAfter(transactionDate.atOffset(ZoneOffset.UTC).toLocalDate())) {
+            throw new BusinessRuleException("Exchange rate must not be later than the transaction date");
+        }
 
-        return new Money(exchangeRate.targetCurrency(), convertedAmount);
+        BigDecimal convertedAmount;
+        if (money.currency().equals(exchangeRate.baseCurrency())
+                && targetCurrency.equals(exchangeRate.targetCurrency())) {
+            convertedAmount = money.amount().multiply(exchangeRate.rate());
+        } else if (targetCurrency.equals(exchangeRate.baseCurrency())
+                && money.currency().equals(exchangeRate.targetCurrency())) {
+            convertedAmount = money.amount().divide(exchangeRate.rate(), DIVISION_CONTEXT);
+        } else {
+            throw new BusinessRuleException(
+                    "Exchange rate does not match the transaction and limit currencies"
+            );
+        }
+
+        Money converted = new Money(targetCurrency, convertedAmount.setScale(2, RoundingMode.HALF_UP));
+        if (!converted.currency().equals(targetCurrency)) {
+            throw new BusinessRuleException("Converted transaction currency must match the limit currency");
+        }
+        return converted;
     }
-
-    private boolean isCurrencyEquals(Money base, Money target){
-        return base.currency().code().equals(target.currency().code());
-    }
-
-
-
-
 }

@@ -15,6 +15,9 @@ spring:
     property-naming-strategy: SNAKE_CASE
   config:
     import: classpath:exchange-rates.yaml
+  threads:
+    virtual:
+      enabled: true
 
 external-api:
     alphavantage:

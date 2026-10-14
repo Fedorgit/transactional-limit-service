@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 
 @Service
@@ -20,6 +21,7 @@ public class ExpenseLimitService {
     private final LimitMapper limitMapper;
     private final ExpenseLimitRepository limitRepository;
 
+    @Transactional
     public LimitResponseDto setNewExpenseLimit(SetNewLimitRequestDto dto){
         Limit newLimit= limitService.setLimit(limitMapper.toDomain(dto));
         ExpenseLimit expenseLimit= limitRepository.save(limitMapper.toEntity(newLimit));
@@ -28,6 +30,7 @@ public class ExpenseLimitService {
 
     }
 
+    @Transactional(readOnly = true)
     public Page<LimitResponseDto> getLimits(String accountFrom, Pageable pageable){
 
         return limitRepository

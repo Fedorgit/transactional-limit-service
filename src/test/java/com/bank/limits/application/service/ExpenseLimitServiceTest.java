@@ -2,6 +2,7 @@ package com.bank.limits.application.service;
 
 import com.bank.limits.application.mapper.LimitMapper;
 import com.bank.limits.domain.model.Limit;
+import com.bank.limits.domain.exception.DomainValidationException;
 import com.bank.limits.infrastructure.persistence.entity.ExpenseLimit;
 import com.bank.limits.infrastructure.persistence.repository.ExpenseLimitRepository;
 import com.bank.limits.infrastructure.rest.dto.limit.LimitResponseDto;
@@ -68,13 +69,13 @@ class ExpenseLimitServiceTest {
                 new BigDecimal("250.00"), "USD", "account-1", "product"
         );
         Limit mappedLimit = mock(Limit.class);
-        IllegalArgumentException expectedException = new IllegalArgumentException("Invalid limit");
+        DomainValidationException expectedException = new DomainValidationException("Invalid limit");
 
         when(limitMapper.toDomain(request)).thenReturn(mappedLimit);
         when(domainLimitService.setLimit(mappedLimit)).thenThrow(expectedException);
 
-        IllegalArgumentException actualException = assertThrows(
-                IllegalArgumentException.class,
+        DomainValidationException actualException = assertThrows(
+                DomainValidationException.class,
                 () -> expenseLimitService.setNewExpenseLimit(request)
         );
 
