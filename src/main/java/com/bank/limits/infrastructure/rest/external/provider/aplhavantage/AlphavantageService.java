@@ -13,6 +13,8 @@ import org.springframework.web.client.RestClientException;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executors;
 
 @Component
 public class AlphavantageService implements ExternalApiClient {
@@ -42,8 +44,9 @@ public class AlphavantageService implements ExternalApiClient {
     )
     public List<ExchangesFromApiDto> doRequest(String baseCurrency, List<String> toCurrency) {
 
-        return toCurrency.stream()
-                .map(tCurrency -> {
+        try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
+            List<CompletableFuture<ExchangesFromApiDto>> futures = toCurrency.stream()
+                .map(tCurrency -> CompletableFuture.supplyAsync( ()-> {
                     AlphaVantageResponse response = this.restClient.get()
                             .uri(uriBuilder -> uriBuilder
                                     .queryParam("function", "CURRENCY_EXCHANGE_RATE")
@@ -58,10 +61,15 @@ public class AlphavantageService implements ExternalApiClient {
                             .map(AlphaVantageResponse::exchangeRateDetails)
                             .map(externalApiResponseMapper::toLocal)
                             .orElse(null);
-                })
+                }, executor))
                 .filter(Objects::nonNull)
                 .toList();
 
+            return futures.stream()
+                    .map(CompletableFuture::join)
+                    .filter(Objects::nonNull)
+                    .toList();
+        }
     }
 
 
