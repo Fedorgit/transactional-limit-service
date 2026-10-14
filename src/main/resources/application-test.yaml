@@ -10,3 +10,15 @@ spring:
     hibernate:
       ddl-auto: create-drop
     show-sql: true
+  jackson:
+    property-naming-strategy: SNAKE_CASE
+  config:
+    import: classpath:exchange-rates.yaml
+  threads:
+    virtual:
+      enabled: true
+
+external-api:
+  alphavantage:
+    key: wiremock-test-key
+    uri: http://localhost:9561

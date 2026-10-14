@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.math.BigDecimal;
-import java.time.OffsetDateTime;
+import java.time.LocalDateTime;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record AplhavantageExchangeRateDetails(
@@ -23,6 +23,6 @@ public record AplhavantageExchangeRateDetails(
                 pattern = "yyyy-MM-dd HH:mm:ss",
                 timezone = "UTC"
         )
-        OffsetDateTime lastRefreshed
+        LocalDateTime lastRefreshed
 ) {
 }

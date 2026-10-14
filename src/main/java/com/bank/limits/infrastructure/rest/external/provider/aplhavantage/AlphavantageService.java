@@ -11,9 +11,8 @@ import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 
 import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.Executors;
 
 @Component
@@ -57,18 +56,38 @@ public class AlphavantageService implements ExternalApiClient {
                             .retrieve()
                             .body(AlphaVantageResponse.class);
 
-                    return Optional.ofNullable(response)
-                            .map(AlphaVantageResponse::exchangeRateDetails)
-                            .map(externalApiResponseMapper::toLocal)
-                            .orElse(null);
+                    if (response == null || response.exchangeRateDetails() == null) {
+                        throw new IllegalStateException(
+                                "Exchange-rate API returned no rate details for " + baseCurrency + "/" + tCurrency
+                        );
+                    }
+                    ExchangesFromApiDto exchange = externalApiResponseMapper.toLocal(
+                            response.exchangeRateDetails()
+                    );
+                    if (exchange == null
+                            || !baseCurrency.equals(exchange.base_currency())
+                            || !tCurrency.equals(exchange.target_currency())
+                            || exchange.rate() == null
+                            || exchange.rate().signum() <= 0
+                            || exchange.rate_date() == null) {
+                        throw new IllegalStateException(
+                                "Exchange-rate API returned an invalid rate for " + baseCurrency + "/" + tCurrency
+                        );
+                    }
+                    return exchange;
                 }, executor))
-                .filter(Objects::nonNull)
                 .toList();
 
-            return futures.stream()
-                    .map(CompletableFuture::join)
-                    .filter(Objects::nonNull)
-                    .toList();
+            try {
+                return futures.stream()
+                        .map(CompletableFuture::join)
+                        .toList();
+            } catch (CompletionException exception) {
+                if (exception.getCause() instanceof RuntimeException cause) {
+                    throw cause;
+                }
+                throw exception;
+            }
         }
     }
 

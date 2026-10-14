@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -48,7 +49,7 @@ public class LimitController {
                     required = true,
                     content = @Content(schema = @Schema(implementation = SetNewLimitRequestDto.class))
             )
-            @RequestBody SetNewLimitRequestDto request
+            @Valid @RequestBody SetNewLimitRequestDto request
     ) {
         return expenseLimitService.setNewExpenseLimit(request);
     }

@@ -14,6 +14,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class DomainModelsValidationTest {
 
+    private static final Instant TRANSACTION_DATE = Instant.parse("2026-01-02T00:00:00Z");
+
     @Test
     void currencyIsNormalizedToUppercase() {
         assertEquals("USD", new Currency("usd").code());
@@ -25,6 +27,8 @@ class DomainModelsValidationTest {
         assertThrows(DomainValidationException.class, () -> new ExpenseCategory(" "));
         assertThrows(DomainValidationException.class, () -> new ExpenseCategory("x".repeat(51)));
         assertThrows(DomainValidationException.class, () -> new AccountNumber("١٢٣٤٥٦٧٨٩٠"));
+        assertThrows(DomainValidationException.class, () -> new AccountNumber("123456789"));
+        assertThrows(DomainValidationException.class, () -> new AccountNumber("123456789A"));
     }
 
     @Test
@@ -88,7 +92,7 @@ class DomainModelsValidationTest {
                 DomainValidationException.class,
                 () -> new Transaction(
                         from, to, category, new Money(usd, BigDecimal.ZERO),
-                        Instant.now(), usd
+                        TRANSACTION_DATE, usd
                 )
         );
         assertThrows(
@@ -102,7 +106,7 @@ class DomainModelsValidationTest {
                 DomainValidationException.class,
                 () -> new Transaction(
                         from, to, category, new Money(usd, BigDecimal.ONE),
-                        Instant.now(), new Currency("EUR")
+                        TRANSACTION_DATE, new Currency("EUR")
                 )
         );
     }

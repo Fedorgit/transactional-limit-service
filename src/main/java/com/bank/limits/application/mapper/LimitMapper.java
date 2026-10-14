@@ -13,6 +13,7 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.time.Clock;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 
@@ -22,6 +23,9 @@ public abstract class LimitMapper {
     @Autowired
     private ExpenseCategoryRepository expenseCategoryRepository;
 
+    @Autowired
+    private Clock clock;
+
     public Limit toDomain(SetNewLimitRequestDto dto) {
         Currency currency = new Currency(dto.currency_code());
         return new Limit(
@@ -29,7 +33,7 @@ public abstract class LimitMapper {
                 currency,
                 new ExpenseCategory(dto.expense_category()),
                 dto.account_from(),
-                OffsetDateTime.now()
+                OffsetDateTime.now(clock)
         );
     }
 

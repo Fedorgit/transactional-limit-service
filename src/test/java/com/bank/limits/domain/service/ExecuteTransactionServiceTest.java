@@ -10,6 +10,7 @@ import com.bank.limits.domain.model.Money;
 import com.bank.limits.domain.model.PreviousTransaction;
 import com.bank.limits.domain.model.Transaction;
 import com.bank.limits.domain.exception.BusinessRuleException;
+import com.bank.limits.domain.exception.DomainValidationException;
 import com.bank.limits.domain.repository.AvailableCategoriesRepository;
 import com.bank.limits.domain.repository.PreviousTransactionRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -21,6 +22,8 @@ import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.List;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -228,6 +231,138 @@ class ExecuteTransactionServiceTest {
                         otherAccountLimit
                 )
         );
+    }
+
+    @Test
+    void executesTransactionInLimitCurrencyWithoutExchangeRate() {
+        stubPreviousTransactions(TRANSACTION_DATE, Instant.parse("2026-03-01T00:00:00Z"), "0.00");
+
+        LimitStatus status = service.execute(
+                transaction("100.00", TRANSACTION_DATE, USD),
+                null,
+                limit("100.00")
+        );
+
+        assertThat(status.isLimitExceeded()).isFalse();
+        assertThat(status.excessAmount()).isEmpty();
+    }
+
+    @Test
+    void transactionBelowLimitDoesNotExceedLimit() {
+        stubPreviousTransactions(TRANSACTION_DATE, Instant.parse("2026-03-01T00:00:00Z"), "0.00");
+
+        LimitStatus status = service.execute(
+                transaction("99.99", TRANSACTION_DATE, USD),
+                null,
+                limit("100.00")
+        );
+
+        assertThat(status.isLimitExceeded()).isFalse();
+        assertThat(status.excessAmount()).isEmpty();
+    }
+
+    @Test
+    void convertsForeignCurrencyAndRoundsHalfUpBeforeComparingWithLimit() {
+        stubPreviousTransactions(TRANSACTION_DATE, Instant.parse("2026-03-01T00:00:00Z"), "0.00");
+        ExchangeRate usdToEur = new ExchangeRate(
+                USD, EUR, new BigDecimal("0.8000"), LocalDate.parse("2026-03-14")
+        );
+
+        LimitStatus status = service.execute(
+                transaction("80.02", TRANSACTION_DATE, EUR),
+                usdToEur,
+                limit("100.01")
+        );
+
+        assertThat(status.isLimitExceeded()).isTrue();
+        assertThat(status.excessAmount()).get()
+                .extracting(Money::amount)
+                .isEqualTo(new BigDecimal("0.02"));
+    }
+
+    @Test
+    void rejectsZeroAndNegativeTransactionAmounts() {
+        assertThatThrownBy(() -> transaction("0.00"))
+                .isInstanceOf(DomainValidationException.class);
+        assertThatThrownBy(() -> transaction("-0.01"))
+                .isInstanceOf(DomainValidationException.class);
+    }
+
+    @Test
+    void rejectsUnknownExpenseCategory() {
+        ExpenseCategory unknownCategory = new ExpenseCategory("unknown");
+        Transaction unknownCategoryTransaction = new Transaction(
+                new AccountNumber("1234567890"),
+                new AccountNumber("1234567891"),
+                unknownCategory,
+                new Money(EUR, new BigDecimal("10.00")),
+                TRANSACTION_DATE,
+                EUR
+        );
+        when(categoriesRepository.contains(unknownCategory)).thenReturn(false);
+        Limit unknownCategoryLimit = new Limit(
+                new Money(USD, new BigDecimal("100.00")),
+                USD,
+                unknownCategory,
+                "1234567890",
+                OffsetDateTime.parse("2026-03-01T00:00:00Z")
+        );
+
+        assertThatThrownBy(() -> service.execute(
+                unknownCategoryTransaction,
+                new ExchangeRate(USD, EUR, new BigDecimal("0.8000"), LocalDate.parse("2026-03-14")),
+                unknownCategoryLimit
+        ))
+                .isInstanceOf(BusinessRuleException.class)
+                .hasMessage("Unknown expense category: unknown");
+    }
+
+    @Test
+    void rejectsMissingOrMismatchedExchangeRate() {
+        assertThatThrownBy(() -> service.execute(
+                transaction("10.00"),
+                null,
+                limit("100.00")
+        ))
+                .isInstanceOf(BusinessRuleException.class)
+                .hasMessageContaining("Exchange rate does not match");
+
+        ExchangeRate unrelatedRate = new ExchangeRate(
+                new Currency("GBP"),
+                new Currency("JPY"),
+                BigDecimal.ONE,
+                LocalDate.parse("2026-03-14")
+        );
+        assertThatThrownBy(() -> service.execute(
+                transaction("10.00"),
+                unrelatedRate,
+                limit("100.00")
+        ))
+                .isInstanceOf(BusinessRuleException.class)
+                .hasMessageContaining("Exchange rate does not match");
+    }
+
+    @Test
+    void rejectsPreviousTransactionsNotConvertedToTheLimitCurrency() {
+        PreviousTransaction previousInEur = new PreviousTransaction(
+                new Money(EUR, new BigDecimal("10.00")),
+                TRANSACTION_DATE.minusSeconds(60)
+        );
+        when(previousTransactionRepository.getPreviousTransactions(
+                "1234567890",
+                CATEGORY,
+                TRANSACTION_DATE,
+                Instant.parse("2026-03-01T00:00:00Z")
+        )).thenReturn(List.of(previousInEur));
+        when(categoriesRepository.contains(CATEGORY)).thenReturn(true);
+
+        assertThatThrownBy(() -> service.execute(
+                transaction("10.00", TRANSACTION_DATE, USD),
+                null,
+                limit("100.00")
+        ))
+                .isInstanceOf(BusinessRuleException.class)
+                .hasMessageContaining("Previous transaction amounts must be in USD");
     }
 
     private Transaction transaction(String amount) {

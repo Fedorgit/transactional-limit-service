@@ -10,7 +10,9 @@ import org.mapstruct.Named;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.math.RoundingMode;
 
 @Mapper(componentModel = MappingConstants.ComponentModel.SPRING)
@@ -34,6 +36,10 @@ public interface ExternalApiResponseMapper {
 
     default LocalDate toLocalDate(OffsetDateTime dateTime) {
         return dateTime == null ? null : dateTime.toLocalDate();
+    }
+
+    default OffsetDateTime toOffsetDateTime(LocalDateTime dateTime) {
+        return dateTime == null ? null : dateTime.atOffset(ZoneOffset.UTC);
     }
 
     @Named("scaleRate")
