@@ -13,7 +13,7 @@ public class TransactionServiceConfig {
     public ExecuteTransactionService executeTransactionService(
             CheckAvailableCategory checkAvailableCategory,
             PreviousTransactionRepository previousTransactionRepository
-    ){
-        return new ExecuteTransactionService(checkAvailableCategory,previousTransactionRepository);
+    ) {
+        return new ExecuteTransactionService(checkAvailableCategory, previousTransactionRepository);
     }
 }

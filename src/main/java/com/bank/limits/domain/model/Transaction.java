@@ -3,8 +3,8 @@ package com.bank.limits.domain.model;
 import com.bank.limits.domain.exception.DomainValidationException;
 
 import java.math.BigDecimal;
-import java.util.Objects;
 import java.time.Instant;
+import java.util.Objects;
 
 public record Transaction(
         AccountNumber accountFrom,
@@ -13,7 +13,7 @@ public record Transaction(
         Money transactionAmount,
         Instant transactionDate,
         Currency currency
-){
+) {
     public Transaction {
         if (accountFrom == null || accountTo == null) {
             throw new DomainValidationException("Transaction account numbers are required");

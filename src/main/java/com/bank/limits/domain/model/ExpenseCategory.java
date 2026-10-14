@@ -6,8 +6,8 @@ public record ExpenseCategory(
         String category
 ) {
 
-    public ExpenseCategory{
-        if (category==null || category.isBlank()){
+    public ExpenseCategory {
+        if (category == null || category.isBlank()) {
             throw new DomainValidationException("Expense category must not be blank");
         }
         if (category.length() > 50) {

@@ -1,8 +1,8 @@
 package com.bank.limits.application.service;
 
 import com.bank.limits.application.mapper.LimitMapper;
-import com.bank.limits.domain.model.Limit;
 import com.bank.limits.domain.exception.DomainValidationException;
+import com.bank.limits.domain.model.Limit;
 import com.bank.limits.infrastructure.persistence.entity.ExpenseLimit;
 import com.bank.limits.infrastructure.persistence.repository.ExpenseLimitRepository;
 import com.bank.limits.infrastructure.rest.dto.limit.LimitResponseDto;
@@ -15,10 +15,7 @@ import java.time.Instant;
 
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 class ExpenseLimitServiceTest {
 

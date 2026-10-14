@@ -1,10 +1,10 @@
 package com.bank.limits.domain.service;
 
+import com.bank.limits.domain.exception.BusinessRuleException;
 import com.bank.limits.domain.model.Currency;
 import com.bank.limits.domain.model.ExpenseCategory;
 import com.bank.limits.domain.model.Limit;
 import com.bank.limits.domain.model.Money;
-import com.bank.limits.domain.exception.BusinessRuleException;
 import com.bank.limits.domain.repository.AvailableCategoriesRepository;
 import org.junit.jupiter.api.Test;
 

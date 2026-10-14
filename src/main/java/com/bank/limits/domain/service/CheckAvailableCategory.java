@@ -9,7 +9,7 @@ public class CheckAvailableCategory {
 
     private final AvailableCategoriesRepository availableCategoriesRepository;
 
-    public boolean isAvailableCategory(ExpenseCategory category){
+    public boolean isAvailableCategory(ExpenseCategory category) {
         return category != null && availableCategoriesRepository.contains(category);
     }
 

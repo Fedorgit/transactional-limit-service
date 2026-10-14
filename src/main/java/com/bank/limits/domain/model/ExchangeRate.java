@@ -1,18 +1,16 @@
 package com.bank.limits.domain.model;
 
-import java.math.BigDecimal;
 import com.bank.limits.domain.exception.DomainValidationException;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
 public record ExchangeRate(
-    Currency baseCurrency,
-    Currency targetCurrency,
-    BigDecimal rate,
-    LocalDate rateDate
-)
-{
+        Currency baseCurrency,
+        Currency targetCurrency,
+        BigDecimal rate,
+        LocalDate rateDate
+) {
     public ExchangeRate {
         if (baseCurrency == null || targetCurrency == null) {
             throw new DomainValidationException("Exchange rate currencies are required");

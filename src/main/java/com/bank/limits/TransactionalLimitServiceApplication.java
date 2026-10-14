@@ -10,8 +10,8 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableRetry
 public class TransactionalLimitServiceApplication {
 
-	public static void main(String[] args) {
-		SpringApplication.run(TransactionalLimitServiceApplication.class, args);
-	}
+    public static void main(String[] args) {
+        SpringApplication.run(TransactionalLimitServiceApplication.class, args);
+    }
 
 }

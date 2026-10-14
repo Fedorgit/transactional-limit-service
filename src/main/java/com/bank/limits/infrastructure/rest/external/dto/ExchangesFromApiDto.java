@@ -8,5 +8,5 @@ public record ExchangesFromApiDto(
         String target_currency,
         BigDecimal rate,
         OffsetDateTime rate_date
-        )
-{}
+) {
+}

@@ -22,19 +22,19 @@ public class ExpenseLimitService {
     private final ExpenseLimitRepository limitRepository;
 
     @Transactional
-    public LimitResponseDto setNewExpenseLimit(SetNewLimitRequestDto dto){
-        Limit newLimit= limitService.setLimit(limitMapper.toDomain(dto));
-        ExpenseLimit expenseLimit= limitRepository.save(limitMapper.toEntity(newLimit));
+    public LimitResponseDto setNewExpenseLimit(SetNewLimitRequestDto dto) {
+        Limit newLimit = limitService.setLimit(limitMapper.toDomain(dto));
+        ExpenseLimit expenseLimit = limitRepository.save(limitMapper.toEntity(newLimit));
 
         return limitMapper.toResponseDto(expenseLimit);
 
     }
 
     @Transactional(readOnly = true)
-    public Page<LimitResponseDto> getLimits(String accountFrom, Pageable pageable){
+    public Page<LimitResponseDto> getLimits(String accountFrom, Pageable pageable) {
 
         return limitRepository
-                .findByAccountFrom(accountFrom,pageable)
+                .findByAccountFrom(accountFrom, pageable)
                 .map(limitMapper::toResponseDto);
     }
 }

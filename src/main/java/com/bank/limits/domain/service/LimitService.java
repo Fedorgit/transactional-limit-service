@@ -1,8 +1,8 @@
 package com.bank.limits.domain.service;
 
-import com.bank.limits.domain.model.Limit;
 import com.bank.limits.domain.exception.BusinessRuleException;
 import com.bank.limits.domain.exception.DomainValidationException;
+import com.bank.limits.domain.model.Limit;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
@@ -10,12 +10,12 @@ public class LimitService {
 
     private final CheckAvailableCategory checkAvailableCategory;
 
-    public Limit setLimit(Limit limit){
+    public Limit setLimit(Limit limit) {
         if (limit == null) {
             throw new DomainValidationException("Limit is required");
         }
 
-        if (!checkAvailableCategory.isAvailableCategory(limit.expenseCategory())){
+        if (!checkAvailableCategory.isAvailableCategory(limit.expenseCategory())) {
             throw new BusinessRuleException(
                     "Unknown expense category: " + limit.expenseCategory().category()
             );

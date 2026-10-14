@@ -2,13 +2,7 @@ package com.bank.limits.domain.service;
 
 import com.bank.limits.domain.exception.BusinessRuleException;
 import com.bank.limits.domain.exception.DomainValidationException;
-import com.bank.limits.domain.model.Currency;
-import com.bank.limits.domain.model.ExchangeRate;
-import com.bank.limits.domain.model.Limit;
-import com.bank.limits.domain.model.LimitStatus;
-import com.bank.limits.domain.model.Money;
-import com.bank.limits.domain.model.PreviousTransaction;
-import com.bank.limits.domain.model.Transaction;
+import com.bank.limits.domain.model.*;
 import com.bank.limits.domain.repository.PreviousTransactionRepository;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -35,7 +29,7 @@ public class ExecuteTransactionService {
             Transaction transaction,
             ExchangeRate exchangeRate,
             Limit limit
-    ){
+    ) {
         if (transaction == null) {
             throw new DomainValidationException("Transaction is required");
         }
@@ -50,7 +44,7 @@ public class ExecuteTransactionService {
             throw new BusinessRuleException("Transaction date must not be earlier than the applicable limit");
         }
 
-        if (!checkAvailableCategory.isAvailableCategory(transaction.expenseCategory())){
+        if (!checkAvailableCategory.isAvailableCategory(transaction.expenseCategory())) {
             throw new BusinessRuleException(
                     "Unknown expense category: " + transaction.expenseCategory().category()
             );
@@ -98,17 +92,16 @@ public class ExecuteTransactionService {
         if (isLimitExceeded) {
             Money excess = calculateLimitExcess(limit, totalTransactionAmount);
             return new LimitStatus(true, Optional.of(excess));
-        }
-        else {
+        } else {
             return new LimitStatus(false, Optional.empty());
         }
     }
 
-    private Money calculateLimitExcess(Limit limit, Money money){
+    private Money calculateLimitExcess(Limit limit, Money money) {
         return new Money(
                 limit.currency(),
                 money.amount().subtract(limit.amount().amount())
-                );
+        );
     }
 
     private Money convertCurrency(

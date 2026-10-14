@@ -9,11 +9,11 @@ import org.mapstruct.MappingConstants;
 import org.mapstruct.Named;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
-import java.math.RoundingMode;
 
 @Mapper(componentModel = MappingConstants.ComponentModel.SPRING)
 public interface ExternalApiResponseMapper {
@@ -21,7 +21,7 @@ public interface ExternalApiResponseMapper {
     @Mapping(target = "base_currency", source = "fromCurrencyCode")
     @Mapping(target = "target_currency", source = "toCurrencyCode")
     @Mapping(target = "rate_date", source = "lastRefreshed")
-    @Mapping(target = "rate", source = "exchangeRate",qualifiedByName = "scaleRate")
+    @Mapping(target = "rate", source = "exchangeRate", qualifiedByName = "scaleRate")
     ExchangesFromApiDto toLocal(AplhavantageExchangeRateDetails aplhavantageExchangeRateDetails);
 
     @Mapping(target = "id", ignore = true)

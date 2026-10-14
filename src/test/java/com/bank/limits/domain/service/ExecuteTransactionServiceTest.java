@@ -1,16 +1,8 @@
 package com.bank.limits.domain.service;
 
-import com.bank.limits.domain.model.AccountNumber;
-import com.bank.limits.domain.model.Currency;
-import com.bank.limits.domain.model.ExchangeRate;
-import com.bank.limits.domain.model.ExpenseCategory;
-import com.bank.limits.domain.model.Limit;
-import com.bank.limits.domain.model.LimitStatus;
-import com.bank.limits.domain.model.Money;
-import com.bank.limits.domain.model.PreviousTransaction;
-import com.bank.limits.domain.model.Transaction;
 import com.bank.limits.domain.exception.BusinessRuleException;
 import com.bank.limits.domain.exception.DomainValidationException;
+import com.bank.limits.domain.model.*;
 import com.bank.limits.domain.repository.AvailableCategoriesRepository;
 import com.bank.limits.domain.repository.PreviousTransactionRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -24,13 +16,9 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 class ExecuteTransactionServiceTest {
 
@@ -398,9 +386,9 @@ class ExecuteTransactionServiceTest {
         List<PreviousTransaction> previousTransactions = amount.equals("0.00")
                 ? List.of()
                 : List.of(new PreviousTransaction(
-                        new Money(USD, new BigDecimal(amount)),
-                        transactionDate.minusSeconds(60)
-                ));
+                new Money(USD, new BigDecimal(amount)),
+                transactionDate.minusSeconds(60)
+        ));
         when(previousTransactionRepository.getPreviousTransactions(
                 "1234567890",
                 CATEGORY,

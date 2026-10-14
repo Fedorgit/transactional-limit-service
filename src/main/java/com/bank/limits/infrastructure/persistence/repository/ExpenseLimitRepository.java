@@ -4,7 +4,6 @@ import com.bank.limits.infrastructure.persistence.entity.ExpenseLimit;
 import jakarta.persistence.LockModeType;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

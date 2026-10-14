@@ -1,10 +1,10 @@
 package com.bank.limits.application.repositories;
 
+import com.bank.limits.domain.exception.BusinessRuleException;
 import com.bank.limits.domain.model.Currency;
 import com.bank.limits.domain.model.ExpenseCategory;
 import com.bank.limits.domain.model.Money;
 import com.bank.limits.domain.model.PreviousTransaction;
-import com.bank.limits.domain.exception.BusinessRuleException;
 import com.bank.limits.domain.repository.PreviousTransactionRepository;
 import com.bank.limits.infrastructure.persistence.entity.ExchangeRate;
 import com.bank.limits.infrastructure.persistence.entity.Transaction;

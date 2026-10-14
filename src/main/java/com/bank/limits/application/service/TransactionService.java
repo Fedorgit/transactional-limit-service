@@ -10,11 +10,7 @@ import com.bank.limits.infrastructure.persistence.dto.ExceededTransactionWithLim
 import com.bank.limits.infrastructure.persistence.entity.Currency;
 import com.bank.limits.infrastructure.persistence.entity.ExchangeRate;
 import com.bank.limits.infrastructure.persistence.entity.ExpenseLimit;
-import com.bank.limits.infrastructure.persistence.repository.CurrencyRepository;
-import com.bank.limits.infrastructure.persistence.repository.ExpenseCategoryRepository;
-import com.bank.limits.infrastructure.persistence.repository.ExchangeRateRepository;
-import com.bank.limits.infrastructure.persistence.repository.ExpenseLimitRepository;
-import com.bank.limits.infrastructure.persistence.repository.TransactionRepository;
+import com.bank.limits.infrastructure.persistence.repository.*;
 import com.bank.limits.infrastructure.rest.dto.transaction.ExecutedTransactionResponseDto;
 import com.bank.limits.infrastructure.rest.dto.transaction.TransactionRequestDto;
 import jakarta.persistence.EntityNotFoundException;
@@ -45,7 +41,7 @@ public class TransactionService {
     private final ExpenseCategoryRepository expenseCategoryRepository;
 
     @Transactional
-    public ExecutedTransactionResponseDto executeTransaction(TransactionRequestDto dto){
+    public ExecutedTransactionResponseDto executeTransaction(TransactionRequestDto dto) {
         if (dto.datetime() == null) {
             throw new IllegalArgumentException("Transaction date is required");
         }
@@ -96,9 +92,8 @@ public class TransactionService {
 
     @Transactional(readOnly = true)
     public Page<ExceededTransactionWithLimitDto> getExceededTransactions
-            (String accountFrom, Pageable pageable)
-    {
-        return transactionRepository.findExceededTransactions(accountFrom,pageable);
+            (String accountFrom, Pageable pageable) {
+        return transactionRepository.findExceededTransactions(accountFrom, pageable);
     }
 
 }

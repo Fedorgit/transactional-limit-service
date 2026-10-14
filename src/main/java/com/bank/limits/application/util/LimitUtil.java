@@ -1,8 +1,6 @@
 package com.bank.limits.application.util;
 
 import com.bank.limits.infrastructure.persistence.entity.Currency;
-import com.bank.limits.infrastructure.persistence.entity.ExchangeRate;
-import com.bank.limits.infrastructure.persistence.entity.ExpenseCategory;
 import com.bank.limits.infrastructure.persistence.entity.ExpenseLimit;
 import com.bank.limits.infrastructure.persistence.repository.ExpenseCategoryRepository;
 import com.bank.limits.infrastructure.persistence.repository.ExpenseLimitRepository;
@@ -20,7 +18,7 @@ public class LimitUtil {
     private final ExpenseCategoryRepository expenseCategoryRepository;
     private final ExpenseLimitRepository expenseLimitRepository;
 
-    public ExpenseLimit createLimit(String accountFrom, String expenseCategory, OffsetDateTime setDatetime){
+    public ExpenseLimit createLimit(String accountFrom, String expenseCategory, OffsetDateTime setDatetime) {
         ExpenseLimit limit = new ExpenseLimit();
         limit.setAccountFrom(accountFrom);
         limit.setAmount(BigDecimal.valueOf(1000));

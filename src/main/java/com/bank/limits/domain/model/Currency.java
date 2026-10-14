@@ -8,7 +8,7 @@ public record Currency(
         String code
 ) {
 
-    public Currency{
+    public Currency {
         if (code == null || code.isBlank()) {
             throw new DomainValidationException("Currency code must not be blank");
         }

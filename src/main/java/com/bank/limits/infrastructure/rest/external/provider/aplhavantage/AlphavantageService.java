@@ -45,38 +45,38 @@ public class AlphavantageService implements ExternalApiClient {
 
         try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
             List<CompletableFuture<ExchangesFromApiDto>> futures = toCurrency.stream()
-                .map(tCurrency -> CompletableFuture.supplyAsync( ()-> {
-                    AlphaVantageResponse response = this.restClient.get()
-                            .uri(uriBuilder -> uriBuilder
-                                    .queryParam("function", "CURRENCY_EXCHANGE_RATE")
-                                    .queryParam("from_currency", baseCurrency)
-                                    .queryParam("to_currency", tCurrency)
-                                    .queryParam("apikey", apiKey)
-                                    .build())
-                            .retrieve()
-                            .body(AlphaVantageResponse.class);
+                    .map(tCurrency -> CompletableFuture.supplyAsync(() -> {
+                        AlphaVantageResponse response = this.restClient.get()
+                                .uri(uriBuilder -> uriBuilder
+                                        .queryParam("function", "CURRENCY_EXCHANGE_RATE")
+                                        .queryParam("from_currency", baseCurrency)
+                                        .queryParam("to_currency", tCurrency)
+                                        .queryParam("apikey", apiKey)
+                                        .build())
+                                .retrieve()
+                                .body(AlphaVantageResponse.class);
 
-                    if (response == null || response.exchangeRateDetails() == null) {
-                        throw new IllegalStateException(
-                                "Exchange-rate API returned no rate details for " + baseCurrency + "/" + tCurrency
+                        if (response == null || response.exchangeRateDetails() == null) {
+                            throw new IllegalStateException(
+                                    "Exchange-rate API returned no rate details for " + baseCurrency + "/" + tCurrency
+                            );
+                        }
+                        ExchangesFromApiDto exchange = externalApiResponseMapper.toLocal(
+                                response.exchangeRateDetails()
                         );
-                    }
-                    ExchangesFromApiDto exchange = externalApiResponseMapper.toLocal(
-                            response.exchangeRateDetails()
-                    );
-                    if (exchange == null
-                            || !baseCurrency.equals(exchange.base_currency())
-                            || !tCurrency.equals(exchange.target_currency())
-                            || exchange.rate() == null
-                            || exchange.rate().signum() <= 0
-                            || exchange.rate_date() == null) {
-                        throw new IllegalStateException(
-                                "Exchange-rate API returned an invalid rate for " + baseCurrency + "/" + tCurrency
-                        );
-                    }
-                    return exchange;
-                }, executor))
-                .toList();
+                        if (exchange == null
+                                || !baseCurrency.equals(exchange.base_currency())
+                                || !tCurrency.equals(exchange.target_currency())
+                                || exchange.rate() == null
+                                || exchange.rate().signum() <= 0
+                                || exchange.rate_date() == null) {
+                            throw new IllegalStateException(
+                                    "Exchange-rate API returned an invalid rate for " + baseCurrency + "/" + tCurrency
+                            );
+                        }
+                        return exchange;
+                    }, executor))
+                    .toList();
 
             try {
                 return futures.stream()
@@ -90,7 +90,6 @@ public class AlphavantageService implements ExternalApiClient {
             }
         }
     }
-
 
 
 }

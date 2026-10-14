@@ -1,20 +1,12 @@
 package com.bank.limits;
 
+import com.bank.limits.infrastructure.persistence.entity.*;
+import com.bank.limits.infrastructure.persistence.repository.*;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.WireMockServer;
-import com.bank.limits.infrastructure.persistence.entity.Currency;
-import com.bank.limits.infrastructure.persistence.entity.ExchangeRate;
-import com.bank.limits.infrastructure.persistence.entity.ExpenseCategory;
-import com.bank.limits.infrastructure.persistence.entity.ExpenseLimit;
-import com.bank.limits.infrastructure.persistence.entity.Transaction;
-import com.bank.limits.infrastructure.persistence.repository.CurrencyRepository;
-import com.bank.limits.infrastructure.persistence.repository.ExchangeRateRepository;
-import com.bank.limits.infrastructure.persistence.repository.ExpenseCategoryRepository;
-import com.bank.limits.infrastructure.persistence.repository.ExpenseLimitRepository;
-import com.bank.limits.infrastructure.persistence.repository.TransactionRepository;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,9 +16,9 @@ import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Primary;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
@@ -37,8 +29,8 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
 
-import java.math.BigDecimal;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -50,7 +42,6 @@ import java.time.ZoneOffset;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.anyRequestedFor;
-import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -69,33 +60,24 @@ class TransactionalLimitApiIntegrationTest {
     @Container
     private static final PostgreSQLContainer<?> POSTGRES =
             new PostgreSQLContainer<>(DockerImageName.parse("postgres:16-alpine"));
-
+    private final HttpClient httpClient = HttpClient.newHttpClient();
     @LocalServerPort
     private int port;
-
     private ObjectMapper objectMapper = new ObjectMapper();
-
     @Autowired
     private JdbcTemplate jdbcTemplate;
-
     @Autowired
     private CurrencyRepository currencyRepository;
-
     @Autowired
     private ExpenseCategoryRepository categoryRepository;
-
     @Autowired
     private ExpenseLimitRepository expenseLimitRepository;
-
     @Autowired
     private TransactionRepository transactionRepository;
-
     @Autowired
     private ExchangeRateRepository exchangeRateRepository;
-
     @Autowired
     private MutableClock clock;
-    private final HttpClient httpClient = HttpClient.newHttpClient();
 
     @DynamicPropertySource
     static void configureProperties(DynamicPropertyRegistry registry) {

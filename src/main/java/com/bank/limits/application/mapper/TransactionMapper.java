@@ -1,10 +1,6 @@
 package com.bank.limits.application.mapper;
 
-import com.bank.limits.domain.model.AccountNumber;
-import com.bank.limits.domain.model.Currency;
-import com.bank.limits.domain.model.ExpenseCategory;
-import com.bank.limits.domain.model.Money;
-import com.bank.limits.domain.model.Transaction;
+import com.bank.limits.domain.model.*;
 import com.bank.limits.infrastructure.rest.dto.transaction.ExecutedTransactionResponseDto;
 import com.bank.limits.infrastructure.rest.dto.transaction.TransactionRequestDto;
 import org.mapstruct.Mapper;

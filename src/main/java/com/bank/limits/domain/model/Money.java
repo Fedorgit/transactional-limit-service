@@ -9,7 +9,7 @@ public record Money(
         BigDecimal amount
 ) {
 
-    public Money{
+    public Money {
 
         if (currency == null) {
             throw new DomainValidationException("Money currency is required");

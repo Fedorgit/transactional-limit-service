@@ -1,7 +1,7 @@
 package com.bank.limits.domain.repository;
 
-import com.bank.limits.domain.model.PreviousTransaction;
 import com.bank.limits.domain.model.ExpenseCategory;
+import com.bank.limits.domain.model.PreviousTransaction;
 
 import java.time.Instant;
 import java.util.List;

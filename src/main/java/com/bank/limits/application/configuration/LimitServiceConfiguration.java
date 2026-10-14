@@ -16,7 +16,7 @@ public class LimitServiceConfiguration {
     }
 
     @Bean
-    public LimitService limitService(CheckAvailableCategory checkAvailableCategory){
+    public LimitService limitService(CheckAvailableCategory checkAvailableCategory) {
         return new LimitService(checkAvailableCategory);
     }
 
